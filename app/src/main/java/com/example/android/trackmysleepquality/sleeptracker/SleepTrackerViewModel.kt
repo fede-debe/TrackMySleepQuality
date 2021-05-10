@@ -17,10 +17,7 @@
 package com.example.android.trackmysleepquality.sleeptracker
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.example.android.trackmysleepquality.database.SleepDatabaseDao
 import com.example.android.trackmysleepquality.database.SleepNight
 import com.example.android.trackmysleepquality.formatNights
@@ -65,6 +62,17 @@ class SleepTrackerViewModel(
         val nightsString = Transformations.map(nights) { nights ->
                 // we parse nights into the map function and define a mapping function as calling formatNights( Utils function)
                 formatNights(nights, application.resources) // application.resources will give us access to the string resources
+        }
+
+        // we need to have the click Handler inside the viewModel and navigation belongs to the fragment. We set this LiveData that changes when we want to navigate
+        // the fragment observe this LiveData and when it changes navigates, then tell the viewModel that it's done and reset the state's variable.
+        private val _navigateToSleepQuality = MutableLiveData<SleepNight>()
+        val navigationToSleepQuality: LiveData<SleepNight>
+        get() = _navigateToSleepQuality
+
+        // reset the navigation variable
+        fun doneNavigating(){
+                _navigateToSleepQuality.value = null
         }
 
         // we need "tonight" set as soon as possible to work with it
@@ -116,6 +124,8 @@ class SleepTrackerViewModel(
                         oldNight.endTimeMilli = System.currentTimeMillis()
                         // we call this function to update the database
                         update(oldNight)
+                        // trigger the navigation to the other fragment, this var is not null only when we can set a sleep quality. If we can't set it we don't navigate.
+                        _navigateToSleepQuality.value = oldNight
 
                 }
         }
