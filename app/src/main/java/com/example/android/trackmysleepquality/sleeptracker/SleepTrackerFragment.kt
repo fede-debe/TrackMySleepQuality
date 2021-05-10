@@ -22,7 +22,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import com.example.android.trackmysleepquality.R
+import com.example.android.trackmysleepquality.database.SleepDatabase
 import com.example.android.trackmysleepquality.databinding.FragmentSleepTrackerBinding
 
 /**
@@ -32,18 +34,41 @@ import com.example.android.trackmysleepquality.databinding.FragmentSleepTrackerB
  */
 class SleepTrackerFragment : Fragment() {
 
+    private lateinit var binding: FragmentSleepTrackerBinding
+
     /**
      * Called when the Fragment is ready to display content to the screen.
-     *
-     * This function uses DataBindingUtil to inflate R.layout.fragment_sleep_quality.
      */
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
 
-        // Get a reference to the binding object and inflate the fragment views.
-        val binding: FragmentSleepTrackerBinding = DataBindingUtil.inflate(
+        binding = DataBindingUtil.inflate(
                 inflater, R.layout.fragment_sleep_tracker, container, false)
+
+        tideUpDatabaseToViewModel()
 
         return binding.root
     }
+
+    private fun tideUpDatabaseToViewModel(){
+        // this method throws an illegal argument exception if the value is null
+        val application = requireNotNull(this.activity).application
+
+        // reference to a data source via reference to the DAO
+        val dataSource = SleepDatabase.getInstance(application).sleepDatabaseDao
+
+        // create an instance of the Factory, we pass the dataSource as well as the application
+        val viewModelFactory = SleepTrackerViewModelFactory(dataSource, application)
+
+        // Now that we have a Factory we ask the ViewModelProvider for a SleepTrackerViewModel (still need to connect the ViewModel to the user interface)
+        val sleepTrackerViewModel = ViewModelProvider(this, viewModelFactory).get(SleepTrackerViewModel::class.java)
+
+        // set variable that access through the binding object to the ViewModel
+        binding.sleepTrackerViewModel = sleepTrackerViewModel
+
+        // specify a current activity as the lifecycle owner of the binding ( binding can now observe LiveData updates)
+        binding.lifecycleOwner = this
+    }
+
+
 }
