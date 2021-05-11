@@ -80,6 +80,16 @@ class SleepTrackerViewModel(
                 it?.isNotEmpty()
         }
 
+        // we use the same technic of triggering navigation to show the snackBar when required
+        private var _showSnackBarEvent = MutableLiveData<Boolean>()
+        val showSnackBarEvent: LiveData<Boolean>
+        get() = _showSnackBarEvent
+
+        // reset the variable's value to use it again when required
+        fun doneShowingSnackBar() {
+                _showSnackBarEvent.value = false
+        }
+
         // we need to have the click Handler inside the viewModel and navigation belongs to the fragment. We set this LiveData that changes when we want to navigate
         // the fragment observe this LiveData and when it changes navigates, then tell the viewModel that it's done and reset the state's variable.
         private val _navigateToSleepQuality = MutableLiveData<SleepNight>()
@@ -155,6 +165,8 @@ class SleepTrackerViewModel(
                 viewModelScope.launch {
                         clear()
                         tonight.value = null
+                        // in order to trigger the snackBar
+                        _showSnackBarEvent.value = true
                 }
         }
 
