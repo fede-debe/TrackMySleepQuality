@@ -64,6 +64,22 @@ class SleepTrackerViewModel(
                 formatNights(nights, application.resources) // application.resources will give us access to the string resources
         }
 
+        // we want to change the visibility based on a state unrelated to the View. WE PASS THESE STATE VARIABLES TO THE ENABLED PROPERTIES OF EACH BUTTON.
+        val startButtonVisible = Transformations.map(tonight) {
+                // tonight is null at the begging, if this is the case we want to display the button to start a night
+                null == it
+        }
+        // the state of the var changes based on a state of tonight. whenever it changes, these variables are updated.
+        val stopButtonVisible = Transformations.map(tonight) {
+                // if tonight has a value, to stop button should be visible. when we click on it, we also reset "tonight" to null
+                null != it
+        }
+
+        val clearButtonVisible = Transformations.map(nights) {
+                // the clear button should be visible only if there are nights to clear
+                it?.isNotEmpty()
+        }
+
         // we need to have the click Handler inside the viewModel and navigation belongs to the fragment. We set this LiveData that changes when we want to navigate
         // the fragment observe this LiveData and when it changes navigates, then tell the viewModel that it's done and reset the state's variable.
         private val _navigateToSleepQuality = MutableLiveData<SleepNight>()
