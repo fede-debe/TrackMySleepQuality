@@ -34,7 +34,7 @@ class SleepTrackerFragment : Fragment() {
 
     private lateinit var binding: FragmentSleepTrackerBinding
     private lateinit var sleepTrackerViewModel: SleepTrackerViewModel
-    private lateinit var adapter: SleepNightAdapter
+    private val adapter = SleepNightAdapter()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -65,7 +65,7 @@ class SleepTrackerFragment : Fragment() {
         // set variable that access through the binding object to the ViewModel
         binding.sleepTrackerViewModel = sleepTrackerViewModel
 
-        adapter = SleepNightAdapter()
+        // tell the RV about the adapter
         binding.sleepList.adapter = adapter
 
         // specify a current activity as the lifecycle owner of the binding ( binding can now observe LiveData updates)
@@ -81,8 +81,12 @@ class SleepTrackerFragment : Fragment() {
             }
         })
 
+        // we need to tell the adapter what data it should be adapting.The viewModel has a list of sleepNights available already and we can observe it.
+        //   with "viewLifecycleOwner" we can make sure that the  observer is only around when the RV is still on screen. When we get a NOT null value, we just assign it to the adapter's data
         sleepTrackerViewModel.nights.observe(viewLifecycleOwner, Observer {
-            adapter.data = it
+            it?.let {
+                adapter.data = it
+            }
         })
     }
 
