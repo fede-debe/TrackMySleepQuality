@@ -56,7 +56,7 @@ class SleepTrackerViewModel(
         private var tonight = MutableLiveData<SleepNight?>()
 
         // we want to get all nights from the database when we create the viewModel. Room will take care of these LiveData and update it if something changes
-        private val nights = database.getAllNights()
+        val nights = database.getAllNights()
 
         // to see the content of the object inside the TextView, we need to transform this data into a "formatted string". Transformation.map is executed every time nights receives new data from the database
         val nightsString = Transformations.map(nights) { nights ->

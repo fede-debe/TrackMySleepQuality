@@ -34,6 +34,7 @@ class SleepTrackerFragment : Fragment() {
 
     private lateinit var binding: FragmentSleepTrackerBinding
     private lateinit var sleepTrackerViewModel: SleepTrackerViewModel
+    private lateinit var adapter: SleepNightAdapter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -64,6 +65,9 @@ class SleepTrackerFragment : Fragment() {
         // set variable that access through the binding object to the ViewModel
         binding.sleepTrackerViewModel = sleepTrackerViewModel
 
+        adapter = SleepNightAdapter()
+        binding.sleepList.adapter = adapter
+
         // specify a current activity as the lifecycle owner of the binding ( binding can now observe LiveData updates)
         binding.lifecycleOwner = this
     }
@@ -75,6 +79,10 @@ class SleepTrackerFragment : Fragment() {
                 this.findNavController().navigate(SleepTrackerFragmentDirections.actionSleepTrackerFragmentToSleepQualityFragment(night.nightId))
                 sleepTrackerViewModel.doneNavigating() // reset the navigation's variable for the next navigation.
             }
+        })
+
+        sleepTrackerViewModel.nights.observe(viewLifecycleOwner, Observer {
+            adapter.data = it
         })
     }
 
