@@ -5,13 +5,29 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.android.trackmysleepquality.R
 import com.example.android.trackmysleepquality.convertDurationToFormatted
 import com.example.android.trackmysleepquality.convertNumericQualityToString
 import com.example.android.trackmysleepquality.database.SleepNight
 
-class SleepNightAdapter: RecyclerView.Adapter<SleepNightAdapter.ViewHolder>() {
+class SleepNightAdapter : androidx.recyclerview.widget.ListAdapter<SleepNight, SleepNightAdapter.ViewHolder>(SleepNightDiffCallback()){
+    /**  DEPRECATED
+     * The ListAdapter class can be used instead of the RV.Adapter. It helps you to build a RV Adapter that's backed by a list. ListAdapter will take care of keeping track of
+     * the list for you and notifying the adapter when the list is updated. 2 generics arguments: 1) Is the type of the list that it's holding(SleepNight), 2) Is the ViewHolder
+     * just like the RV.Adapter, in addition there's a constructor parameter that takes the item callback. The ListAdapter will use this to figure out what changed random list
+     * get updated. Now that we are Subclassing ListAdapter we don't need to define the field data. LA will take care of keeping track of the list for us. LA can also figure out
+     * the number of items from the entire list, so we don't need to override getItemCount().
+     *
+     * Inside onBindViewHolder we  can't use the list "data" anymore, instead LA provides a method called getItem that can be used to get an item. -> getItem(position).
+     *
+     * In this way we implemented DiffUtil inside the adapter, and it use DiffUtil to calculate minimum changes when the list gets updated. In order to update the list through
+     * the Observer inside the Fragment, we can use a method called submitList to tell a new version of the list is available. It will detect every item we added, moved, removed,
+     * or changed and update the items shown by RV. Now the app is going faster than before. DiffUtil and ListAdapter figured out what needed changed and the RV figured out how
+     * animate the change.
+     *
+     *
     // this will be the data that the adapter is adapting for RecyclerView to use. The RV won't use data directly, it won't even know it exists.
     // We'll use the adapter to expose or adapt data into the RV API
     // update the list with a custom setter whenever the data changes, and to notify it we can call this adapter method. If the items were more complex than textBoxes, this way can be a pretty slow operation.
@@ -22,12 +38,12 @@ class SleepNightAdapter: RecyclerView.Adapter<SleepNightAdapter.ViewHolder>() {
     }
 
     // the RV needs to know how many items to display, return the total number of items in the dataset held by the adapter.
-    override fun getItemCount(): Int = data.size
+    override fun getItemCount(): Int = data.size */
 
     // Called by RV to display the data at the specified position. This method update the views held by the ViewHolder to show the item at the position passed.
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         // RV told us the position that needs to be bound, we can just look it up in our data property
-        val item = data[position]
+        val item = getItem(position)
         // in this way we encapsulate the code to actually display the View
         holder.bind(item)
     }
@@ -42,10 +58,10 @@ class SleepNightAdapter: RecyclerView.Adapter<SleepNightAdapter.ViewHolder>() {
     }
 
     // now that we have a layout that display a RV item, we need to create a ViewHolder that can display it. Every time we bind the ViewHolder, we need to access all the attributes of the item.
-    class ViewHolder private constructor(itemView: View): RecyclerView.ViewHolder(itemView) {
-        val sleepLength: TextView = itemView.findViewById(R.id.sleep_length)
-        val quality: TextView = itemView.findViewById(R.id.quality_string)
-        val qualityImage: ImageView = itemView.findViewById(R.id.quality_image)
+    class ViewHolder private constructor(itemView: View): RecyclerView.ViewHolder(itemView) { // private constructor that can only be called inside the class
+        private val sleepLength: TextView = itemView.findViewById(R.id.sleep_length)
+        private val quality: TextView = itemView.findViewById(R.id.quality_string)
+        private val qualityImage: ImageView = itemView.findViewById(R.id.quality_image)
         // now that we define the ViewHolder we are ready to update SleepNightAdapter to use it.
 
         // in this way we are hiding the details of how to update the views into the ViewHolder which has the view.
@@ -68,6 +84,8 @@ class SleepNightAdapter: RecyclerView.Adapter<SleepNightAdapter.ViewHolder>() {
                 })
         }
 
+        // details of which layout to inflate. Even if the constructor of the class is private, since the function is inside the companion object, it can still call the constructor, another class couldn't.
+        // Since we want to call from on the ViewHolder class and not on an instance of a ViewHolder, we need to convert the function to a companion object
         companion object {
             fun from(parent: ViewGroup): ViewHolder {
                 val view = LayoutInflater.from(parent.context).inflate(R.layout.list_item_sleep_night, parent, false)  // as TextView - in this way we made a view, we don't need to cast because we are inflating a constraint layout
@@ -75,6 +93,22 @@ class SleepNightAdapter: RecyclerView.Adapter<SleepNightAdapter.ViewHolder>() {
             }
         }
     }
+}
 
+// DiffUtil  has a class called item callback that you extend in order to figure out the difference between two items,  we pass SleepNight as generic parameter.
+class SleepNightDiffCallback : DiffUtil.ItemCallback<SleepNight>() {
+    // this method will check ,by using the ids of the item, if an item was moved, removed or edit.
+    override fun areItemsTheSame(oldItem: SleepNight, newItem: SleepNight): Boolean {
+        // if the oldItem has the same Id of newItem, we'll return true because the item are the same. Otherwise, false.
+        // By checking the ID, DiffUtil will know the  difference between an item being edit, removed, or  moved.
+        return oldItem.nightId == newItem.nightId
+    }
+
+    // We use this method to know if the content of an item have changed or if they are equal.
+    override fun areContentsTheSame(oldItem: SleepNight, newItem: SleepNight): Boolean {
+        // for this app we don't need to do anything custom, we only check if the oldItem is equal to the newItem.
+        // This will perform an equality check on the items. It will check all the fields because we defined SleepNight as a Data class( automatically define equals and other methods for us).
+        return oldItem == newItem
+    }
 
 }

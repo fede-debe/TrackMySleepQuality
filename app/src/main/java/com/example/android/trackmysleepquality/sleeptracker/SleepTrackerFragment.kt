@@ -1,18 +1,3 @@
-/*
- * Copyright 2018, The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 package com.example.android.trackmysleepquality.sleeptracker
 
@@ -39,17 +24,16 @@ class SleepTrackerFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
 
-        binding = DataBindingUtil.inflate(
-                inflater, R.layout.fragment_sleep_tracker, container, false)
+        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_sleep_tracker, container, false)
 
-        setUpDatabase()
+        setUpUI()
         setUpObserver()
         setUpSnackBar()
 
         return binding.root
     }
 
-    private fun setUpDatabase(){
+    private fun setUpUI(){
         // get the application - this method throws an illegal argument exception if the value is null
         val application = requireNotNull(this.activity).application
 
@@ -85,7 +69,7 @@ class SleepTrackerFragment : Fragment() {
         //   with "viewLifecycleOwner" we can make sure that the  observer is only around when the RV is still on screen. When we get a NOT null value, we just assign it to the adapter's data
         sleepTrackerViewModel.nights.observe(viewLifecycleOwner, Observer {
             it?.let {
-                adapter.data = it
+                adapter.submitList(it)
             }
         })
     }
