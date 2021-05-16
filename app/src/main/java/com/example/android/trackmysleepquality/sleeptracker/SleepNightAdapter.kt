@@ -63,7 +63,12 @@ class SleepNightAdapter : ListAdapter<SleepNight, SleepNightAdapter.ViewHolder>(
         // in this way we are hiding the details of how to update the views into the ViewHolder which has the view.
         // In this way the adapter  doesn't have to worry about them. In this way  we can add more viewHolders to the adapter without complicating it and call a similar method to this one.
         fun bind(item: SleepNight) {
-            val res = itemView.context.resources
+            binding.sleep = item
+            binding.executePendingBindings()
+
+           /**
+            * I MOVED THIS BLOCK OF CODE INSIDE THE BINDING ADAPTER TO ADAPT THESE VIEWS AND BIND IT TO THE ADAPTER
+            * val res = itemView.context.resources
             // dataBinding to declare the Views
             binding.sleepLength.text = convertDurationToFormatted(item.startTimeMilli, item.endTimeMilli, res)
             binding.qualityString.text = convertNumericQualityToString(item.sleepQuality, res)
@@ -77,7 +82,7 @@ class SleepNightAdapter : ListAdapter<SleepNight, SleepNightAdapter.ViewHolder>(
                     5 -> R.drawable.ic_sleep_5
                     else -> R.drawable.ic_sleep_active
                 }
-            )
+            )*/
         }
 
         // details of which layout to inflate. Even if the constructor of the class is private, since the function is inside the companion object, it can still call the constructor, another class couldn't.
