@@ -1,18 +1,17 @@
 package com.example.android.trackmysleepquality.sleeptracker
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.android.trackmysleepquality.R
 import com.example.android.trackmysleepquality.convertDurationToFormatted
 import com.example.android.trackmysleepquality.convertNumericQualityToString
 import com.example.android.trackmysleepquality.database.SleepNight
+import androidx.recyclerview.widget.ListAdapter
+import com.example.android.trackmysleepquality.databinding.ListItemSleepNightBinding
 
-class SleepNightAdapter : androidx.recyclerview.widget.ListAdapter<SleepNight, SleepNightAdapter.ViewHolder>(SleepNightDiffCallback()){
+class SleepNightAdapter : ListAdapter<SleepNight, SleepNightAdapter.ViewHolder>(SleepNightDiffCallback()){
     /**  DEPRECATED
      * The ListAdapter class can be used instead of the RV.Adapter. It helps you to build a RV Adapter that's backed by a list. ListAdapter will take care of keeping track of
      * the list for you and notifying the adapter when the list is updated. 2 generics arguments: 1) Is the type of the list that it's holding(SleepNight), 2) Is the ViewHolder
@@ -58,21 +57,17 @@ class SleepNightAdapter : androidx.recyclerview.widget.ListAdapter<SleepNight, S
     }
 
     // now that we have a layout that display a RV item, we need to create a ViewHolder that can display it. Every time we bind the ViewHolder, we need to access all the attributes of the item.
-    class ViewHolder private constructor(itemView: View): RecyclerView.ViewHolder(itemView) { // private constructor that can only be called inside the class
-        private val sleepLength: TextView = itemView.findViewById(R.id.sleep_length)
-        private val quality: TextView = itemView.findViewById(R.id.quality_string)
-        private val qualityImage: ImageView = itemView.findViewById(R.id.quality_image)
+    // private constructor that can only be called inside the class. Must define the binding ad property(val) if not you get an error.
+    class ViewHolder private constructor(val binding: ListItemSleepNightBinding): RecyclerView.ViewHolder(binding.root) { // RV doesn't know anything about data binding. Instead we pass the root view of the binding which is the constraint layout.
         // now that we define the ViewHolder we are ready to update SleepNightAdapter to use it.
-
         // in this way we are hiding the details of how to update the views into the ViewHolder which has the view.
         // In this way the adapter  doesn't have to worry about them. In this way  we can add more viewHolders to the adapter without complicating it and call a similar method to this one.
         fun bind(item: SleepNight) {
-
             val res = itemView.context.resources
-            sleepLength.text = convertDurationToFormatted(item.startTimeMilli, item.endTimeMilli, res)
-            quality.text = convertNumericQualityToString(item.sleepQuality, res)
-
-            qualityImage.setImageResource(
+            // dataBinding to declare the Views
+            binding.sleepLength.text = convertDurationToFormatted(item.startTimeMilli, item.endTimeMilli, res)
+            binding.qualityString.text = convertNumericQualityToString(item.sleepQuality, res)
+            binding.qualityImage.setImageResource(
                 when (item.sleepQuality) {
                     0 -> R.drawable.ic_sleep_0
                     1 -> R.drawable.ic_sleep_1
@@ -81,15 +76,17 @@ class SleepNightAdapter : androidx.recyclerview.widget.ListAdapter<SleepNight, S
                     4 -> R.drawable.ic_sleep_4
                     5 -> R.drawable.ic_sleep_5
                     else -> R.drawable.ic_sleep_active
-                })
+                }
+            )
         }
 
         // details of which layout to inflate. Even if the constructor of the class is private, since the function is inside the companion object, it can still call the constructor, another class couldn't.
         // Since we want to call from on the ViewHolder class and not on an instance of a ViewHolder, we need to convert the function to a companion object
         companion object {
             fun from(parent: ViewGroup): ViewHolder {
-                val view = LayoutInflater.from(parent.context).inflate(R.layout.list_item_sleep_night, parent, false)  // as TextView - in this way we made a view, we don't need to cast because we are inflating a constraint layout
-                return ViewHolder(view) // wrap the view in a holder and pass it back to the RV
+               val layoutInflater = LayoutInflater.from(parent.context)
+                val binding = ListItemSleepNightBinding.inflate(layoutInflater, parent, false)// inflated with dataBinding
+                return ViewHolder(binding) // wrap the view in a holder and pass it back to the RV
             }
         }
     }
