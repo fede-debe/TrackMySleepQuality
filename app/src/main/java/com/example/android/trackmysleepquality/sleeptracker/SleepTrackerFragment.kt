@@ -5,11 +5,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.GridLayoutManager
 import com.example.android.trackmysleepquality.R
 import com.example.android.trackmysleepquality.database.SleepDatabase
 import com.example.android.trackmysleepquality.databinding.FragmentSleepTrackerBinding
@@ -19,10 +21,10 @@ class SleepTrackerFragment : Fragment() {
 
     private lateinit var binding: FragmentSleepTrackerBinding
     private lateinit var sleepTrackerViewModel: SleepTrackerViewModel
-    private val adapter = SleepNightAdapter()
+    private lateinit var adapter: SleepNightAdapter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
+                              savedInstanceState: Bundle?): View {
 
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_sleep_tracker, container, false)
 
@@ -48,6 +50,15 @@ class SleepTrackerFragment : Fragment() {
 
         // set variable that access through the binding object to the ViewModel
         binding.sleepTrackerViewModel = sleepTrackerViewModel
+
+        // add a GridLayout to the RV and set it as LayoutManager
+        val manager = GridLayoutManager(activity, 3)
+        binding.sleepList.layoutManager = manager
+
+        // we only define a callback to display the nightId related to the item that was clicked in a Toast.
+        adapter = SleepNightAdapter(SleepNightListener {
+                nightId -> Toast.makeText(context, "$nightId", Toast.LENGTH_SHORT).show()
+        })
 
         // tell the RV about the adapter
         binding.sleepList.adapter = adapter

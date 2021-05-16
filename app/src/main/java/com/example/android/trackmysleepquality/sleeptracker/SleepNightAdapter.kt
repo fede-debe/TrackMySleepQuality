@@ -3,15 +3,13 @@ package com.example.android.trackmysleepquality.sleeptracker
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.RecyclerView
-import com.example.android.trackmysleepquality.R
-import com.example.android.trackmysleepquality.convertDurationToFormatted
-import com.example.android.trackmysleepquality.convertNumericQualityToString
-import com.example.android.trackmysleepquality.database.SleepNight
 import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
+import com.example.android.trackmysleepquality.database.SleepNight
 import com.example.android.trackmysleepquality.databinding.ListItemSleepNightBinding
 
-class SleepNightAdapter : ListAdapter<SleepNight, SleepNightAdapter.ViewHolder>(SleepNightDiffCallback()){
+// we define the clickListener here to get the click event out of the fragment. In this way the adapter doesn't care about how clicks get handled, it just takes a callback.
+class SleepNightAdapter(val clickListener: SleepNightListener) : ListAdapter<SleepNight, SleepNightAdapter.ViewHolder>(SleepNightDiffCallback()){
     /**  DEPRECATED
      * The ListAdapter class can be used instead of the RV.Adapter. It helps you to build a RV Adapter that's backed by a list. ListAdapter will take care of keeping track of
      * the list for you and notifying the adapter when the list is updated. 2 generics arguments: 1) Is the type of the list that it's holding(SleepNight), 2) Is the ViewHolder
@@ -39,14 +37,6 @@ class SleepNightAdapter : ListAdapter<SleepNight, SleepNightAdapter.ViewHolder>(
     // the RV needs to know how many items to display, return the total number of items in the dataset held by the adapter.
     override fun getItemCount(): Int = data.size */
 
-    // Called by RV to display the data at the specified position. This method update the views held by the ViewHolder to show the item at the position passed.
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        // RV told us the position that needs to be bound, we can just look it up in our data property
-        val item = getItem(position)
-        // in this way we encapsulate the code to actually display the View
-        holder.bind(item)
-    }
-
     // tell RV how to create a new view holder. The RV does everything in terms of ViewHolders.
     // Whenever a RV needs a new ViewHolder it will ask for one, our job is to give it whenever it asks. To display a ViewHolder it needs to be passed to a ViewGroup.
     // to actually make a ViewHolder, you'll need to make a view for it to hold.
@@ -56,14 +46,24 @@ class SleepNightAdapter : ListAdapter<SleepNight, SleepNightAdapter.ViewHolder>(
         return ViewHolder.from(parent) // cleaner way to have a viewHolder and encapsulate the details of inflation and what layout to the ViewHolder class
     }
 
+    // Called by RV to display the data at the specified position. This method update the views held by the ViewHolder to show the item at the position passed.
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        /** RV told us the position that needs to be bound, we can just look it up in our data property
+        val item = getItem(position)
+        // in this way we encapsulate the code to actually display the View
+        holder.bind(item)*/
+        holder.bind(getItem(position)!!, clickListener)
+    }
+
     // now that we have a layout that display a RV item, we need to create a ViewHolder that can display it. Every time we bind the ViewHolder, we need to access all the attributes of the item.
     // private constructor that can only be called inside the class. Must define the binding ad property(val) if not you get an error.
     class ViewHolder private constructor(val binding: ListItemSleepNightBinding): RecyclerView.ViewHolder(binding.root) { // RV doesn't know anything about data binding. Instead we pass the root view of the binding which is the constraint layout.
         // now that we define the ViewHolder we are ready to update SleepNightAdapter to use it.
         // in this way we are hiding the details of how to update the views into the ViewHolder which has the view.
         // In this way the adapter  doesn't have to worry about them. In this way  we can add more viewHolders to the adapter without complicating it and call a similar method to this one.
-        fun bind(item: SleepNight) {
+        fun bind(item: SleepNight, clickListener: SleepNightListener) {
             binding.sleep = item
+            binding.clickListener = clickListener
             binding.executePendingBindings()
 
            /**
@@ -113,4 +113,11 @@ class SleepNightDiffCallback : DiffUtil.ItemCallback<SleepNight>() {
         return oldItem == newItem
     }
 
+}
+
+// class created to handle the click on items by the user, this will trigger the method of this class with the selected item.
+// The ViewHolder informs the fragment that a click happened. We don't hold an entire reference to the object since having the night ID gives us the ability to access the data anytime we want from the database.
+// We need to have a reference to the click listener inside the XML file and call it from data binding
+class SleepNightListener(val clickListener: (sleepId: Long) -> Unit) {
+    fun onClick(night: SleepNight) = clickListener(night.nightId)
 }
