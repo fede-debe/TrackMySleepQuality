@@ -1,15 +1,25 @@
 package com.example.android.trackmysleepquality.sleeptracker
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.example.android.trackmysleepquality.R
 import com.example.android.trackmysleepquality.database.SleepNight
 import com.example.android.trackmysleepquality.databinding.ListItemSleepNightBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+private const val ITEM_VIEW_TYPE_HEADER = 0
+private const val ITEM_VIEW_TYPE_ITEM = 1
 
 // we define the clickListener here to get the click event out of the fragment. In this way the adapter doesn't care about how clicks get handled, it just takes a callback.
-class SleepNightAdapter(val clickListener: SleepNightListener) : ListAdapter<SleepNight, SleepNightAdapter.ViewHolder>(SleepNightDiffCallback()){
+// To display a Header, we need to use any type of View Holder. We must change "SleepNightAdapter.ViewHolder" with "RecyclerView..ViewHolder" to achieve it.
+class SleepNightAdapter(val clickListener: SleepNightListener) : ListAdapter<DataItem, RecyclerView.ViewHolder>(SleepNightDiffCallback()){
     /**  DEPRECATED
      * The ListAdapter class can be used instead of the RV.Adapter. It helps you to build a RV Adapter that's backed by a list. ListAdapter will take care of keeping track of
      * the list for you and notifying the adapter when the list is updated. 2 generics arguments: 1) Is the type of the list that it's holding(SleepNight), 2) Is the ViewHolder
@@ -37,22 +47,52 @@ class SleepNightAdapter(val clickListener: SleepNightListener) : ListAdapter<Sle
     // the RV needs to know how many items to display, return the total number of items in the dataset held by the adapter.
     override fun getItemCount(): Int = data.size */
 
+    private val adapterScope = CoroutineScope(Dispatchers.Default)
     // tell RV how to create a new view holder. The RV does everything in terms of ViewHolders.
     // Whenever a RV needs a new ViewHolder it will ask for one, our job is to give it whenever it asks. To display a ViewHolder it needs to be passed to a ViewGroup.
     // to actually make a ViewHolder, you'll need to make a view for it to hold.
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         // android support creating views from XML  from anywhere you have access to another view. The same is valid for the LayoutInflater, you just need to pass a context to it.
         // parent.context = this means  you will create a LayoutInflater based on the parent view. LayoutInflater uses that information to inflate new views correctly.
-        return ViewHolder.from(parent) // cleaner way to have a viewHolder and encapsulate the details of inflation and what layout to the ViewHolder class
+        return when (viewType) {
+            ITEM_VIEW_TYPE_HEADER -> TextViewHolder.from(parent)
+            ITEM_VIEW_TYPE_ITEM -> ViewHolder.from(parent)
+            else -> throw ClassCastException("Unknown viewType $viewType ")
+        }
+    }
+
+    override fun getItemViewType(position: Int): Int {
+        return when (getItem(position)) {
+            is DataItem.Header -> ITEM_VIEW_TYPE_HEADER
+            is DataItem.SleepNightItem -> ITEM_VIEW_TYPE_ITEM
+        }
+    }
+
+    fun addHeaderAndSubmitList(list: List<SleepNight>?){
+        adapterScope.launch {
+            val items = when (list) {
+                null -> listOf(DataItem.Header)
+                else -> listOf(DataItem.Header) + list.map { DataItem.SleepNightItem(it)  }
+            }
+            withContext(Dispatchers.Main) {
+                submitList(items)
+            }
+        }
+
     }
 
     // Called by RV to display the data at the specified position. This method update the views held by the ViewHolder to show the item at the position passed.
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         /** RV told us the position that needs to be bound, we can just look it up in our data property
         val item = getItem(position)
         // in this way we encapsulate the code to actually display the View
         holder.bind(item)*/
-        holder.bind(clickListener, getItem(position)!!)
+        when (holder) {
+            is ViewHolder -> {
+                val nightItem = getItem(position) as DataItem.SleepNightItem
+                holder.bind(clickListener, nightItem.sleepNight)
+            }
+        }
     }
 
     // now that we have a layout that display a RV item, we need to create a ViewHolder that can display it. Every time we bind the ViewHolder, we need to access all the attributes of the item.
@@ -84,7 +124,6 @@ class SleepNightAdapter(val clickListener: SleepNightListener) : ListAdapter<Sle
                 }
             )*/
         }
-
         // details of which layout to inflate. Even if the constructor of the class is private, since the function is inside the companion object, it can still call the constructor, another class couldn't.
         // Since we want to call from on the ViewHolder class and not on an instance of a ViewHolder, we need to convert the function to a companion object
         companion object {
@@ -95,19 +134,29 @@ class SleepNightAdapter(val clickListener: SleepNightListener) : ListAdapter<Sle
             }
         }
     }
+
+    class TextViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        companion object{
+            fun from(parent: ViewGroup): TextViewHolder {
+                val layoutInflater = LayoutInflater.from(parent.context)
+                val view = layoutInflater.inflate(R.layout.header, parent, false)
+                return TextViewHolder(view)
+            }
+        }
+    }
 }
 
 // DiffUtil  has a class called item callback that you extend in order to figure out the difference between two items,  we pass SleepNight as generic parameter.
-class SleepNightDiffCallback : DiffUtil.ItemCallback<SleepNight>() {
+class SleepNightDiffCallback : DiffUtil.ItemCallback<DataItem>() {
     // this method will check ,by using the ids of the item, if an item was moved, removed or edit.
-    override fun areItemsTheSame(oldItem: SleepNight, newItem: SleepNight): Boolean {
+    override fun areItemsTheSame(oldItem: DataItem, newItem: DataItem): Boolean {
         // if the oldItem has the same Id of newItem, we'll return true because the item are the same. Otherwise, false.
         // By checking the ID, DiffUtil will know the  difference between an item being edit, removed, or  moved.
-        return oldItem.nightId == newItem.nightId
+        return oldItem.id == newItem.id
     }
 
     // We use this method to know if the content of an item have changed or if they are equal.
-    override fun areContentsTheSame(oldItem: SleepNight, newItem: SleepNight): Boolean {
+    override fun areContentsTheSame(oldItem: DataItem, newItem: DataItem): Boolean {
         // for this app we don't need to do anything custom, we only check if the oldItem is equal to the newItem.
         // This will perform an equality check on the items. It will check all the fields because we defined SleepNight as a Data class( automatically define equals and other methods for us).
         return oldItem == newItem
@@ -120,4 +169,16 @@ class SleepNightDiffCallback : DiffUtil.ItemCallback<SleepNight>() {
 // We need to have a reference to the click listener inside the XML file and call it from data binding
 class SleepNightListener(val clickListener: (sleepId: Long) -> Unit) {
     fun onClick(night: SleepNight) = clickListener(night.nightId)
+}
+
+sealed class DataItem {
+    data class SleepNightItem(val sleepNight: SleepNight): DataItem() {
+        override val id = sleepNight.nightId
+    }
+
+    object Header: DataItem(){
+        override val id = Long.MIN_VALUE
+    }
+
+    abstract val id: Long
 }

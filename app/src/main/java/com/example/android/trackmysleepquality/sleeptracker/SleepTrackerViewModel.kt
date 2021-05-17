@@ -174,12 +174,13 @@ class SleepTrackerViewModel(
                 database.clear()
         }
 
-       // we expose a public immutable live data
+       // we expose a public immutable live data. We define it for navigation.
         private val _navigateToSleepDataQuality = MutableLiveData<Long?>()
         val navigateToSleepDataQuality
         get() = _navigateToSleepDataQuality
 
         fun onSleepNightClicked(id: Long) {
+                // we set the value of the LiveData passed
                 _navigateToSleepDataQuality.value = id
         }
 

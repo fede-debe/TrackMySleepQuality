@@ -54,7 +54,7 @@ class SleepTrackerFragment : Fragment() {
         val manager = GridLayoutManager(activity, 3)
         binding.sleepList.layoutManager = manager
 
-        // we only define a callback to display the nightId related to the item that was clicked in a Toast.
+        // we pass to the detail fragment the id of the view that was clicked
         adapter = SleepNightAdapter(SleepNightListener {
                 nightId -> sleepTrackerViewModel.onSleepNightClicked(nightId)
         })
@@ -86,7 +86,7 @@ class SleepTrackerFragment : Fragment() {
         //   with "viewLifecycleOwner" we can make sure that the  observer is only around when the RV is still on screen. When we get a NOT null value, we just assign it to the adapter's data
         sleepTrackerViewModel.nights.observe(viewLifecycleOwner, Observer {
             it?.let {
-                adapter.submitList(it)
+                adapter.addHeaderAndSubmitList(it)
             }
         })
 
@@ -102,6 +102,5 @@ class SleepTrackerFragment : Fragment() {
         })
 
     }
-
 
 }
