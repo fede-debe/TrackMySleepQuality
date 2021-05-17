@@ -12,6 +12,21 @@ import com.example.android.trackmysleepquality.database.SleepNight
 // We'll need 3, one for each View. In Kotlin we can write a binding adapter as  an extension function. The Binding adapter will take care of all the work of formatting and
 // updating the views as our data changes.
 
+@BindingAdapter("sleepImage")
+fun ImageView.setSleepImage(item: SleepNight?) {
+    item?.let {
+        setImageResource(when (item.sleepQuality) {
+            0 -> R.drawable.ic_sleep_0
+            1 -> R.drawable.ic_sleep_1
+            2 -> R.drawable.ic_sleep_2
+            3 -> R.drawable.ic_sleep_3
+            4 -> R.drawable.ic_sleep_4
+            5 -> R.drawable.ic_sleep_5
+            else -> R.drawable.ic_sleep_active
+        })
+    }
+}
+
 @BindingAdapter("sleepDurationFormatted")
 fun TextView.setSleepDurationFormatted(item: SleepNight?) {
     item?.let {
@@ -26,17 +41,6 @@ fun TextView.setSleepQualityString(item: SleepNight?) {
     }
 }
 
-@BindingAdapter("sleepImage")
-fun ImageView.setSleepImage(item: SleepNight) {
-    setImageResource(when (item.sleepQuality) {
-            0 -> R.drawable.ic_sleep_0
-            1 -> R.drawable.ic_sleep_1
-            2 -> R.drawable.ic_sleep_2
-            3 -> R.drawable.ic_sleep_3
-            4 -> R.drawable.ic_sleep_4
-            5 -> R.drawable.ic_sleep_5
-            else -> R.drawable.ic_sleep_active
-        })
-}
+
 
 

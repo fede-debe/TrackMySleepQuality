@@ -30,7 +30,6 @@ class SleepTrackerFragment : Fragment() {
 
         setUpUI()
         setUpObserver()
-        setUpSnackBar()
 
         return binding.root
     }
@@ -57,7 +56,7 @@ class SleepTrackerFragment : Fragment() {
 
         // we only define a callback to display the nightId related to the item that was clicked in a Toast.
         adapter = SleepNightAdapter(SleepNightListener {
-                nightId -> Toast.makeText(context, "$nightId", Toast.LENGTH_SHORT).show()
+                nightId -> sleepTrackerViewModel.onSleepNightClicked(nightId)
         })
 
         // tell the RV about the adapter
@@ -69,10 +68,17 @@ class SleepTrackerFragment : Fragment() {
 
     private fun setUpObserver() {
         // we need to observe "navigateSleepQuality" so we know when to navigate.
-        sleepTrackerViewModel.navigationToSleepQuality.observe(viewLifecycleOwner, Observer { night ->
+        sleepTrackerViewModel.navigateToSleepQuality.observe(viewLifecycleOwner, Observer { night ->
             night?.let {
                 this.findNavController().navigate(SleepTrackerFragmentDirections.actionSleepTrackerFragmentToSleepQualityFragment(night.nightId))
                 sleepTrackerViewModel.doneNavigating() // reset the navigation's variable for the next navigation.
+            }
+        })
+
+        sleepTrackerViewModel.navigateToSleepDataQuality.observe(viewLifecycleOwner, Observer { night ->
+            night?.let {
+                this.findNavController().navigate(SleepTrackerFragmentDirections.actionSleepTrackerFragmentToSleepDetailFragment(night))
+                sleepTrackerViewModel.onSleepDataQualityNavigated()
             }
         })
 
@@ -83,9 +89,6 @@ class SleepTrackerFragment : Fragment() {
                 adapter.submitList(it)
             }
         })
-    }
-
-    private fun setUpSnackBar() {
 
         sleepTrackerViewModel.showSnackBarEvent.observe(viewLifecycleOwner, Observer {
             if (it == true) {
@@ -99,5 +102,6 @@ class SleepTrackerFragment : Fragment() {
         })
 
     }
+
 
 }

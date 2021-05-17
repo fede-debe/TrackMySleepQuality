@@ -57,12 +57,16 @@ dependencies {
 
     // Support libraries
     implementation "androidx.constraintlayout:constraintlayout:$version_constraint_layout"
+    implementation "androidx.appcompat:appcompat:$version_appcompat"
+    implementation "androidx.fragment:fragment-ktx:$version_fragment"
+
 
     // Android KTX
     implementation "androidx.core:core-ktx:$version_core"
 
     // Room and Lifecycle dependencies
     implementation "androidx.room:room-runtime:$version_room"
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     kapt "androidx.room:room-compiler:$version_room"
     implementation "androidx.lifecycle:lifecycle-extensions:$version_lifecycle_extensions"
 

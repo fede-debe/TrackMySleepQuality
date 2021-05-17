@@ -92,8 +92,8 @@ class SleepTrackerViewModel(
 
         // we need to have the click Handler inside the viewModel and navigation belongs to the fragment. We set this LiveData that changes when we want to navigate
         // the fragment observe this LiveData and when it changes navigates, then tell the viewModel that it's done and reset the state's variable.
-        private val _navigateToSleepQuality = MutableLiveData<SleepNight>()
-        val navigationToSleepQuality: LiveData<SleepNight>
+        private val _navigateToSleepQuality = MutableLiveData<SleepNight?>()
+        val navigateToSleepQuality: LiveData<SleepNight?>
         get() = _navigateToSleepQuality
 
         // reset the navigation variable
@@ -172,6 +172,20 @@ class SleepTrackerViewModel(
 
         private suspend fun clear(){
                 database.clear()
+        }
+
+       // we expose a public immutable live data
+        private val _navigateToSleepDataQuality = MutableLiveData<Long?>()
+        val navigateToSleepDataQuality
+        get() = _navigateToSleepDataQuality
+
+        fun onSleepNightClicked(id: Long) {
+                _navigateToSleepDataQuality.value = id
+        }
+
+        // navigation is done so we set the LiveData to null
+        fun  onSleepDataQualityNavigated() {
+                _navigateToSleepDataQuality.value = null
         }
 
 

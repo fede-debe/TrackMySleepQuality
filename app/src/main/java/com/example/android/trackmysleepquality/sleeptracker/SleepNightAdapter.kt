@@ -52,7 +52,7 @@ class SleepNightAdapter(val clickListener: SleepNightListener) : ListAdapter<Sle
         val item = getItem(position)
         // in this way we encapsulate the code to actually display the View
         holder.bind(item)*/
-        holder.bind(getItem(position)!!, clickListener)
+        holder.bind(clickListener, getItem(position)!!)
     }
 
     // now that we have a layout that display a RV item, we need to create a ViewHolder that can display it. Every time we bind the ViewHolder, we need to access all the attributes of the item.
@@ -61,7 +61,7 @@ class SleepNightAdapter(val clickListener: SleepNightListener) : ListAdapter<Sle
         // now that we define the ViewHolder we are ready to update SleepNightAdapter to use it.
         // in this way we are hiding the details of how to update the views into the ViewHolder which has the view.
         // In this way the adapter  doesn't have to worry about them. In this way  we can add more viewHolders to the adapter without complicating it and call a similar method to this one.
-        fun bind(item: SleepNight, clickListener: SleepNightListener) {
+        fun bind(clickListener: SleepNightListener, item: SleepNight) {
             binding.sleep = item
             binding.clickListener = clickListener
             binding.executePendingBindings()
