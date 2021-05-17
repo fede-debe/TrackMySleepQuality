@@ -51,7 +51,15 @@ class SleepTrackerFragment : Fragment() {
         binding.sleepTrackerViewModel = sleepTrackerViewModel
 
         // add a GridLayout to the RV and set it as LayoutManager
-        val manager = GridLayoutManager(activity, 3)
+        val manager = GridLayoutManager(activity, 4)
+        // configure the spanSizeLookup to get a custom gridLayout. This object will be used to determine how many spans to use for each item in the list.
+        // we need to make an object because it doesn't take a Lambda.
+        manager.spanSizeLookup = object: GridLayoutManager.SpanSizeLookup(){
+            override fun getSpanSize(position: Int) = when(position) {
+                0 -> 4
+                else -> 1
+            }
+        }
         binding.sleepList.layoutManager = manager
 
         // we pass to the detail fragment the id of the view that was clicked
@@ -87,6 +95,7 @@ class SleepTrackerFragment : Fragment() {
         sleepTrackerViewModel.nights.observe(viewLifecycleOwner, Observer {
             it?.let {
                 adapter.addHeaderAndSubmitList(it)
+                // change to the new call to get the Header and the submitList
             }
         })
 
